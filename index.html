@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>หุ่นยนต์ประกบกล่องสินค้า | UR3 Auto Box Folding Robot</title>
+    <meta name="description"
+        content="นวัตกรรมหุ่นยนต์ UR3 อัจฉริยะสำหรับการประกอบกล่องสินค้าอัตโนมัติ พร้อม AI ตรวจจับวัตถุ ตรวจฝั่ง และอ่านสัญลักษณ์" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ===== CSS RESET & VARIABLES ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #00d4ff;
+            --primary-dark: #0099cc;
+            --accent: #7c3aed;
+            --accent-light: #a855f7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-dark: #020817;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f6ff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --gradient-1: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            --gradient-2: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            --gradient-3: linear-gradient(135deg, #10b981 0%, #00d4ff 100%);
+            --glow-blue: 0 0 40px rgba(0, 212, 255, 0.3);
+            --glow-purple: 0 0 40px rgba(124, 58, 237, 0.3);
+            --font-thai: 'Kanit', sans-serif;
+            --font-en: 'Inter', sans-serif;
+            --radius: 16px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-thai);
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* ===== SCROLL BAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.15) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+                var(--bg-dark);
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* ===== NAVBAR ===== */
+        #navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 0;
+            transition: var(--transition);
+        }
+
+        #navbar.scrolled {
+            background: rgba(2, 8, 23, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-logo-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .nav-logo-sub {
+            font-size: 10px;
+            color: var(--primary);
+            font-weight: 400;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.08);
+        }
+
+        .nav-badge {
+            background: var(--gradient-1);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            transition: var(--transition);
+        }
+
+        .nav-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        /* ===== MAIN WRAPPER ===== */
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .section {
+            padding: 100px 24px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ===== HERO SECTION ===== */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+        }
+
+        .hero-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-size: 13px;
+            color: var(--primary);
+            margin-bottom: 24px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.3);
+            }
+        }
+
+        .hero-title {
+            font-size: clamp(32px, 5vw, 60px);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 12px;
+            animation: fadeInUp 0.7s ease 0.1s both;
+        }
+
+        .hero-title-gradient {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            animation: fadeInUp 0.7s ease 0.2s both;
+        }
+
+        .hero-desc {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.7s ease 0.3s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.7s ease 0.4s both;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: var(--glow-blue);
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 14px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: var(--transition);
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.08);
+            transform: translateY(-3px);
+        }
+
+        /* hero stats */
+        .hero-stats {
+            display: flex;
+            gap: 32px;
+            margin-top: 40px;
+            animation: fadeInUp 0.7s ease 0.5s both;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-num {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* hero image side */
+        .hero-visual {
+            position: relative;
+            animation: fadeInRight 0.8s ease 0.2s both;
+        }
+
+        .hero-img-wrap {
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            box-shadow: var(--glow-blue), 0 40px 80px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .hero-img-wrap img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-img-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(2, 8, 23, 0.6) 0%, transparent 50%);
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: scan 3s linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+
+        .ai-tag {
+            position: absolute;
+            background: rgba(2, 8, 23, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px;
+        }
+
+        .ai-tag-top {
+            top: 16px;
+            right: 16px;
+        }
+
+        .ai-tag-bot {
+            bottom: 16px;
+            left: 16px;
+        }
+
+        .ai-tag-title {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .ai-tag-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* floating glow orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: rgba(0, 212, 255, 0.12);
+            top: -60px;
+            left: -80px;
+        }
+
+        .orb-2 {
+            width: 200px;
+            height: 200px;
+            background: rgba(124, 58, 237, 0.15);
+            bottom: 0;
+            right: -60px;
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            color: var(--primary);
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== OVERVIEW SECTION ===== */
+        #overview {
+            background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.03) 50%, transparent);
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .overview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .overview-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius);
+            background: var(--gradient-1);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .overview-card:hover::before {
+            opacity: 0.04;
+        }
+
+        .overview-card:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateY(-6px);
+            box-shadow: var(--glow-blue);
+        }
+
+        .card-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .icon-blue {
+            background: rgba(0, 212, 255, 0.15);
+        }
+
+        .icon-purple {
+            background: rgba(124, 58, 237, 0.15);
+        }
+
+        .icon-green {
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .icon-orange {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ===== TECH SECTION ===== */
+        #tech {}
+
+        .tech-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+
+        .tech-tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .tech-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .tech-tag:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.06);
+        }
+
+        .tech-tag-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-cyan {
+            background: var(--primary);
+        }
+
+        .dot-purple {
+            background: var(--accent-light);
+        }
+
+        .dot-green {
+            background: var(--success);
+        }
+
+        .dot-orange {
+            background: var(--warning);
+        }
+
+        .tech-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            position: relative;
+        }
+
+        .tech-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            transition: var(--transition);
+        }
+
+        .flow-step:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .flow-num {
+            min-width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .num-cyan {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--primary);
+        }
+
+        .num-purple {
+            background: rgba(124, 58, 237, 0.2);
+            color: var(--accent-light);
+        }
+
+        .num-green {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .num-orange {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .flow-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .flow-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        /* ===== AI FEATURES SECTION ===== */
+        #ai {
+            background: linear-gradient(180deg, transparent, rgba(124, 58, 237, 0.05) 50%, transparent);
+        }
+
+        .ai-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .ai-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .ai-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-1);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: var(--transition);
+        }
+
+        .ai-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .ai-card:hover {
+            border-color: rgba(124, 58, 237, 0.4);
+            transform: translateY(-6px);
+            box-shadow: var(--glow-purple);
+        }
+
+        .ai-card-num {
+            font-size: 48px;
+            font-weight: 800;
+            opacity: 0.06;
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-family: var(--font-en);
+        }
+
+        .ai-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .ai-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .ai-card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .ai-feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ai-feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .ai-feature-list li::before {
+            content: '✓';
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+            font-weight: 700;
+        }
+
+        /* ===== METRICS SECTION ===== */
+        #metrics {
+            padding: 60px 24px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(124, 58, 237, 0.05));
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        #howitworks {}
+
+        .steps-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            position: relative;
+            align-items: start;
+        }
+
+        .steps-row::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 12%;
+            right: 12%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent-light));
+            z-index: 0;
+        }
+
+        .step-item {
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        .step-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin: 0 auto 16px;
+            position: relative;
+            z-index: 1;
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+        }
+
+        .step-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .step-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ===== TEAM SECTION ===== */
+        #team {}
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .team-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: var(--glow-blue);
+        }
+
+        .team-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 16px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .team-name {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .team-role {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .team-id {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-en);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .footer-logo {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .footer-logo span {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .hero-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .overview-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .tech-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .steps-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .steps-row::before {
+                display: none;
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+
+            .overview-grid,
+            .ai-grid,
+            .metrics-grid,
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 64px 16px;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background -->
+    <div class="bg-canvas"></div>
+    <div class="bg-grid"></div>
+
+    <!-- Navbar -->
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a class="nav-logo" href="#">
+                <div class="nav-logo-icon">🤖</div>
+                <div>
+                    <div class="nav-logo-text">UR3 Auto Box</div>
+                    <div class="nav-logo-sub">Robot System</div>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#overview">ภาพรวม</a></li>
+                <li><a href="#tech">เทคโนโลยี</a></li>
+                <li><a href="#ai">AI Features</a></li>
+                <li><a href="#howitworks">การทำงาน</a></li>
+                <li><a href="#team">ทีม</a></li>
+            </ul>
+            <a href="#ai" class="nav-badge">🧠 AI Integration</a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- ===== HERO SECTION ===== -->
+        <section id="hero" class="section">
+            <div class="container">
+                <div class="hero-wrapper">
+                    <div>
+                        <div class="hero-badge">
+                            <span class="hero-badge-dot"></span>
+                            Project Active • UR3 Collaborative Robot
+                        </div>
+                        <h1 class="hero-title">
+                            <span class="hero-title-gradient">หุ่นยนต์ประกบ</span><br>
+                            กล่องสินค้า
+                        </h1>
+                        <p class="hero-subtitle">UR3 Auto Box Folding Robot System</p>
+                        <p class="hero-desc">
+                            ระบบหุ่นยนต์ UR3 อัจฉริยะสำหรับการประกอบและพับกล่องสินค้าอัตโนมัติ<br>
+                            ขับเคลื่อนด้วย AI ตรวจจับวัตถุ ตรวจสอบฝั่ง และอ่านสัญลักษณ์บนกล่อง<br>
+                            เพื่อความแม่นยำและประสิทธิภาพสูงสุดในกระบวนการผลิต
+                        </p>
+                        <div class="hero-cta">
+                            <a href="#ai" class="btn-primary">🧠 ดู AI Features</a>
+                            <a href="#howitworks" class="btn-outline">⚙️ วิธีการทำงาน</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="hero-stat">
+                                <div class="hero-stat-num">UR3</div>
+                                <div class="hero-stat-label">Robot Platform</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-num">3</div>
+                                <div class="hero-stat-label">AI Modules</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-num">360°</div>
+                                <div class="hero-stat-label">Coverage Range</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual">
+                        <div class="orb orb-1"></div>
+                        <div class="orb orb-2"></div>
+                        <div class="hero-img-wrap">
+                            <img src="hero.png" alt="UR3 Robot Box Folding System" />
+                            <div class="hero-img-overlay"></div>
+                            <div class="scan-line"></div>
+                            <div class="ai-tag ai-tag-top">
+                                <div class="ai-tag-title">🎯 AI Detection</div>
+                                <div class="ai-tag-val">Active</div>
+                            </div>
+                            <div class="ai-tag ai-tag-bot">
+                                <div class="ai-tag-title">🤖 UR3 Status</div>
+                                <div class="ai-tag-val">Running</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== METRICS ===== -->
+        <section id="metrics">
+            <div class="container">
+                <div class="metrics-grid">
+                    <div class="reveal">
+                        <div class="metric-val">UR3</div>
+                        <div class="metric-label">Universal Robots Platform</div>
+                    </div>
+                    <div class="reveal">
+                        <div class="metric-val">3</div>
+                        <div class="metric-label">AI Vision Modules</div>
+                    </div>
+                    <div class="reveal">
+                        <div class="metric-val">Auto</div>
+                        <div class="metric-label">พับกล่องอัตโนมัติ</div>
+                    </div>
+                    <div class="reveal">
+                        <div class="metric-val">360°</div>
+                        <div class="metric-label">ช่วงการทำงานของแขนกล</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== OVERVIEW ===== -->
+        <section id="overview" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="section-tag">🔍 ภาพรวมโปรเจค</div>
+                    <h2 class="section-title">โปรเจคนี้คืออะไร?</h2>
+                    <p class="section-desc">ระบบประกอบกล่องสินค้าอัตโนมัติด้วยหุ่นยนต์ UR3 และ AI Vision</p>
+                </div>
+                <div class="overview-grid">
+                    <div class="overview-card reveal">
+                        <div class="card-icon icon-blue">📦</div>
+                        <h3 class="card-title">การประกอบกล่องสินค้า</h3>
+                        <p class="card-desc">
+                            ระบบพับและประกอบกล่องสินค้าอัตโนมัติโดยหุ่นยนต์ UR3
+                            ที่สามารถจัดการกล่องได้อย่างแม่นยำและรวดเร็ว
+                            ครอบคลุมทุกขั้นตอนตั้งแต่หยิบกล่องไปจนถึงพับสำเร็จ
+                        </p>
+                    </div>
+                    <div class="overview-card reveal">
+                        <div class="card-icon icon-purple">🤖</div>
+                        <h3 class="card-title">หุ่นยนต์ UR3 Collaborative</h3>
+                        <p class="card-desc">
+                            ใช้แขนกล UR3 (Universal Robots) ที่มีความยืดหยุ่นสูง
+                            สามารถทำงานร่วมกับมนุษย์ได้อย่างปลอดภัย
+                            และมีช่วงการทำงานครบถ้วนตามระยะของแขนกล
+                        </p>
+                    </div>
+                    <div class="overview-card reveal">
+                        <div class="card-icon icon-green">🧠</div>
+                        <h3 class="card-title">AI-Powered Automation</h3>
+                        <p class="card-desc">
+                            ผนวก AI Vision เข้ากับระบบ เพื่อตรวจจับวัตถุ ตรวจสอบฝั่งกล่อง
+                            และอ่านสัญลักษณ์ ทำให้หุ่นยนต์สามารถตัดสินใจและ
+                            ทำงานได้อย่างอัจฉริยะโดยไม่ต้องพึ่งมนุษย์
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TECH ===== -->
+        <section id="tech" class="section">
+            <div class="container">
+                <div class="tech-wrapper">
+                    <div>
+                        <div class="section-tag" style="display:inline-flex;">⚙️ เทคโนโลยีที่ใช้</div>
+                        <h2 class="section-title" style="margin-top:16px;">Tech Stack<br><span
+                                style="background:var(--gradient-1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ที่อยู่เบื้องหลัง</span>
+                        </h2>
+                        <p class="card-desc" style="margin-bottom:0">
+                            โปรเจคนี้ผสมผสานเทคโนโลยีหุ่นยนต์ UR3 กับ Computer Vision
+                            และ AI เพื่อสร้างระบบประกอบกล่องที่ชาญฉลาดและเชื่อถือได้
+                        </p>
+                        <div class="tech-tag-list">
+                            <div class="tech-tag"><span class="tech-tag-dot dot-cyan"></span>UR3 Robot</div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-purple"></span>Computer Vision</div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-green"></span>Object Detection</div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-orange"></span>OCR / Symbol Recognition
+                            </div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-cyan"></span>ROS / Robot Control</div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-purple"></span>Deep Learning</div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-green"></span>Image Classification</div>
+                            <div class="tech-tag"><span class="tech-tag-dot dot-orange"></span>Robotic Arm Control</div>
+                        </div>
+                    </div>
+                    <div class="tech-diagram reveal">
+                        <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:20px;">⚡
+                            ขั้นตอนการทำงานของระบบ</div>
+                        <div class="tech-flow">
+                            <div class="flow-step">
+                                <div class="flow-num num-cyan">1</div>
+                                <div>
+                                    <div class="flow-text">📷 Camera Capture</div>
+                                    <div class="flow-sub">กล้องจับภาพกล่องสินค้าที่ยังไม่พับ</div>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-num num-purple">2</div>
+                                <div>
+                                    <div class="flow-text">🔍 AI Object Detection</div>
+                                    <div class="flow-sub">AI ตรวจจับวัตถุและตำแหน่งกล่อง</div>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-num num-orange">3</div>
+                                <div>
+                                    <div class="flow-text">🔄 Side Verification</div>
+                                    <div class="flow-sub">ตรวจสอบว่าหงายถูกฝั่งหรือไม่</div>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-num num-green">4</div>
+                                <div>
+                                    <div class="flow-text">🤖 UR3 Execution</div>
+                                    <div class="flow-sub">แขนกล UR3 หยิบและพับกล่อง</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== AI FEATURES ===== -->
+        <section id="ai" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="section-tag">🧠 AI Integration</div>
+                    <h2 class="section-title">AI Features<br><span
+                            style="background:var(--gradient-2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ที่ขับเคลื่อนระบบ</span>
+                    </h2>
+                    <p class="section-desc">
+                        สามโมดูล AI หลักที่ทำให้หุ่นยนต์ UR3 สามารถทำงานได้อย่างอัตโนมัติ
+                        และอัจฉริยะโดยไม่ต้องพึ่งการควบคุมจากมนุษย์
+                    </p>
+                </div>
+                <div class="ai-grid">
+
+                    <!-- AI Feature 1 -->
+                    <div class="ai-card reveal">
+                        <div class="ai-card-num">01</div>
+                        <span class="ai-icon">🎯</span>
+                        <h3 class="ai-card-title">Object Detection</h3>
+                        <p class="ai-card-desc">
+                            AI ตรวจจับกล่องสินค้าที่ยังไม่พับในพื้นที่ทำงาน
+                            คำนวณตำแหน่งที่แน่นอน และส่งคำสั่งให้แขนกล
+                            UR3 เข้าหยิบได้อย่างแม่นยำทุกจุดในระยะการทำงาน
+                        </p>
+                        <ul class="ai-feature-list">
+                            <li>ตรวจจับกล่องสินค้าที่ยังไม่พับ</li>
+                            <li>คำนวณพิกัด 3D สำหรับแขนกล</li>
+                            <li>ระบุตำแหน่งมุมและขอบกล่อง</li>
+                            <li>รองรับกล่องหลายขนาดพร้อมกัน</li>
+                        </ul>
+                    </div>
+
+                    <!-- AI Feature 2 -->
+                    <div class="ai-card reveal">
+                        <div class="ai-card-num">02</div>
+                        <span class="ai-icon">🔄</span>
+                        <h3 class="ai-card-title">Side Detection & Verification</h3>
+                        <p class="ai-card-desc">
+                            AI ตรวจสอบว่ากล่องหงายถูกฝั่งหรือผิดฝั่ง
+                            ก่อนที่แขนกลจะเริ่มพับ เพื่อให้ผลลัพธ์ถูกต้อง
+                            และป้องกันความเสียหายในกระบวนการ
+                        </p>
+                        <ul class="ai-feature-list">
+                            <li>ตรวจสอบฝั่งถูก/ผิดของกล่อง</li>
+                            <li>จำแนก orientation ของกล่อง</li>
+                            <li>แจ้งเตือนเมื่อกล่องวางผิดฝั่ง</li>
+                            <li>ปรับทิศทางการพับให้ถูกต้อง</li>
+                        </ul>
+                    </div>
+
+                    <!-- AI Feature 3 -->
+                    <div class="ai-card reveal">
+                        <div class="ai-card-num">03</div>
+                        <span class="ai-icon">🔤</span>
+                        <h3 class="ai-card-title">Symbol & Text Recognition</h3>
+                        <p class="ai-card-desc">
+                            AI อ่านและแปลความหมายสัญลักษณ์ ตัวหนังสือ
+                            บนกล่องสินค้า เพื่อช่วยให้แขนกล UR3
+                            สามารถหยิบกล่องได้ถูกต้องทุกจุดในระยะทำงาน
+                        </p>
+                        <ul class="ai-feature-list">
+                            <li>อ่านสัญลักษณ์และตัวอักษรบนกล่อง</li>
+                            <li>ระบุประเภทและขนาดกล่องจากสัญลักษณ์</li>
+                            <li>OCR สำหรับข้อความบนบรรจุภัณฑ์</li>
+                            <li>แยกแยะกล่องตามสัญลักษณ์ที่อ่านได้</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- AI Architecture Banner -->
+                <div class="reveal"
+                    style="margin-top:40px;background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(0,212,255,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:20px;padding:32px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+                    <div style="font-size:40px;">🤖</div>
+                    <div style="flex:1;min-width:200px;">
+                        <div style="font-size:18px;font-weight:800;margin-bottom:8px;">AI Integration Architecture</div>
+                        <p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">
+                            ทั้ง 3 โมดูล AI ทำงานร่วมกันแบบ Real-time Pipeline —
+                            <strong style="color:var(--primary)">Object Detection</strong> ค้นหาและระบุตำแหน่งกล่อง →
+                            <strong style="color:var(--accent-light)">Side Verification</strong> ยืนยันฝั่งที่ถูกต้อง →
+                            <strong style="color:var(--success)">Symbol Recognition</strong> อ่านข้อมูลบนกล่อง →
+                            <strong style="color:var(--warning)">UR3 Execution</strong> แขนกลพับกล่องอัตโนมัติ
+                        </p>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                            <span style="color:var(--success)">●</span> Real-time Processing
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                            <span style="color:var(--primary)">●</span> End-to-End Automation
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                            <span style="color:var(--accent-light)">●</span> Intelligent Decision Making
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== HOW IT WORKS ===== -->
+        <section id="howitworks" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="section-tag">⚙️ การทำงาน</div>
+                    <h2 class="section-title">How It Works</h2>
+                    <p class="section-desc">5 ขั้นตอนการทำงานของระบบหุ่นยนต์ประกบกล่องสินค้า</p>
+                </div>
+                <div class="steps-row">
+                    <div class="step-item reveal">
+                        <div class="step-circle">📷</div>
+                        <div class="step-title">Scan & Detect</div>
+                        <div class="step-desc">กล้องสแกนและตรวจจับกล่องสินค้าในพื้นที่ทำงาน</div>
+                    </div>
+                    <div class="step-item reveal">
+                        <div class="step-circle">🔍</div>
+                        <div class="step-title">AI Analysis</div>
+                        <div class="step-desc">AI วิเคราะห์ตำแหน่ง ฝั่ง และสัญลักษณ์บนกล่อง</div>
+                    </div>
+                    <div class="step-item reveal">
+                        <div class="step-circle">🎯</div>
+                        <div class="step-title">Plan & Path</div>
+                        <div class="step-desc">ระบบคำนวณเส้นทางและแผนการเคลื่อนที่ของแขนกล</div>
+                    </div>
+                    <div class="step-item reveal">
+                        <div class="step-circle">🤖</div>
+                        <div class="step-title">Pick & Fold</div>
+                        <div class="step-desc">UR3 หยิบกล่องและพับตามขั้นตอนที่กำหนดไว้</div>
+                    </div>
+                    <div class="step-item reveal">
+                        <div class="step-circle">✅</div>
+                        <div class="step-title">Verify & Done</div>
+                        <div class="step-desc">ตรวจสอบผลลัพธ์และยืนยันว่าพับสำเร็จถูกต้อง</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TEAM ===== -->
+        <section id="team" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="section-tag">👥 ทีมผู้พัฒนา</div>
+                    <h2 class="section-title">Meet The Team</h2>
+                    <p class="section-desc">ทีมนักศึกษาผู้อยู่เบื้องหลังโปรเจคนี้</p>
+                </div>
+                <div class="team-grid">
+                    <div class="team-card reveal">
+                        <div class="team-avatar" style="background:rgba(0,212,255,0.1);">👨‍💻</div>
+                        <div class="team-name">สมาชิกคนที่ 1</div>
+                        <div class="team-role">Robot Engineer</div>
+                        <div class="team-id">UR3 Control & Integration</div>
+                    </div>
+                    <div class="team-card reveal">
+                        <div class="team-avatar" style="background:rgba(124,58,237,0.1);">👩‍💻</div>
+                        <div class="team-name">สมาชิกคนที่ 2</div>
+                        <div class="team-role">AI / Vision Engineer</div>
+                        <div class="team-id">Object Detection & CV</div>
+                    </div>
+                    <div class="team-card reveal">
+                        <div class="team-avatar" style="background:rgba(16,185,129,0.1);">👨‍🔬</div>
+                        <div class="team-name">สมาชิกคนที่ 3</div>
+                        <div class="team-role">ML Engineer</div>
+                        <div class="team-id">Model Training & OCR</div>
+                    </div>
+                    <div class="team-card reveal">
+                        <div class="team-avatar" style="background:rgba(245,158,11,0.1);">👩‍🔬</div>
+                        <div class="team-name">สมาชิกคนที่ 4</div>
+                        <div class="team-role">System Integrator</div>
+                        <div class="team-id">Pipeline & Automation</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="footer-logo">UR3 <span>Auto Box Folding</span></div>
+        <p>หุ่นยนต์ประกบกล่องสินค้า — ระบบประกอบกล่องอัตโนมัติด้วย AI &amp; UR3</p>
+        <br />
+        <p>Built with ❤️ &nbsp;|&nbsp; Powered by <a href="#">UR3 + AI Vision</a></p>
+    </footer>
+
+    <script>
+        // ===== NAVBAR SCROLL =====
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        // ===== REVEAL ON SCROLL =====
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        reveals.forEach(el => observer.observe(el));
+
+        // ===== SMOOTH SCROLL =====
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ===== STAGGER REVEAL =====
+        document.querySelectorAll('.overview-grid, .ai-grid, .team-grid, .metrics-grid').forEach(grid => {
+            const children = grid.querySelectorAll('.reveal');
+            children.forEach((child, i) => {
+                child.style.transitionDelay = `${i * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+
+</html>
